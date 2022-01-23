@@ -22,14 +22,24 @@ class PuzzleController extends GetxController {
     15,
   ].obs;
   RxList offsets = [].obs;
+  var count = 0.obs;
   var freePos = Offset(3, 3).obs;
   var initialPos = 0.0.obs;
   final row = 4;
   @override
   void onInit() {
     data.shuffle();
+
     super.onInit();
   }
+
+// void updateOffset(int index){
+
+// for(int i=0;i<index;++i){
+//   offsets
+// }
+
+// }
 
   void setOffset(int index) {
     offsets.add(
@@ -41,15 +51,19 @@ class PuzzleController extends GetxController {
     );
   }
 
+  void updateCount() {
+    ++count.value;
+  }
+
   double getXPosition(int index, double div) {
-    return getXCoordinate(index) * div;
+    return index * div;
   }
 
   double getYPosition(int index, double div) {
-    return getYCoordinate(index) * div;
+    return index * div;
   }
 
-  double getXCoordinate(int index) {
+  double getYCoordinate(int index) {
     if (index > 3 && index < 8) {
       return (index - 4);
     }
@@ -63,7 +77,7 @@ class PuzzleController extends GetxController {
     return index.toDouble();
   }
 
-  double getYCoordinate(int index) {
+  double getXCoordinate(int index) {
     if (index > 3 && index < 8) {
       return 1;
     } else if (index > 7 && index < 12) {
@@ -90,31 +104,35 @@ class PuzzleController extends GetxController {
 
   void onVerticalDragUpdate(
       DragUpdateDetails details, Offset offset, int index) {
-    if (offset.dy > row - 4 &&
-        offset.dx < row &&
+    // up direction
+    if (offsets[index].dy > row - 4 &&
+        offsets[index].dx < row &&
         (initialPos.value - details.globalPosition.dy) > 0) {
-      if ((freePos.value.dx + 1) == offset.dy &&
-          freePos.value.dy == offset.dx) {
-        offsets.insert(index, Offset(freePos.value.dx, freePos.value.dy));
-        print(offsets[index]);
+      if (offsets[index].dx == freePos.value.dx &&
+          offsets[index].dy == freePos.value.dy + 1) {
+        offsets[index] = freePos.value;
         updateFreePos(offset);
+        updateCount();
       }
-    } else if (offset.dy < row - 1 &&
-        offset.dx < row &&
+      // down direction
+    } else if (offsets[index].dy < row &&
+        offsets[index].dx < row &&
         (initialPos.value - details.globalPosition.dy) < 0) {
-          // down
-      if ((freePos.value.dx - 1) == offset.dy &&
-          freePos.value.dy == offset.dx) {
-       
-        offsets.insert(index, Offset(freePos.value.dx, freePos.value.dy));
-        print(offsets[index]);
+      if (offsets[index].dx == freePos.value.dx &&
+          offsets[index].dy == freePos.value.dy - 1) {
+        offsets[index] = freePos.value;
         updateFreePos(offset);
+        updateCount();
       }
     }
   }
 
-  void onVerticalDragStart(DragStartDetails details, Offset offset, int index) {
-    initialPos.value = details.globalPosition.dy;
+  void onVerticalDragStart(
+          DragStartDetails details, Offset offset, int index) =>
+      initialPos.value = details.globalPosition.dy;
+
+  void onVerticalDragEnd(DragEndDetails details) {
+    initialPos.value = 0.0;
   }
 
   void onVerticalDragDown(DragDownDetails details) {
@@ -123,18 +141,43 @@ class PuzzleController extends GetxController {
     // print("y " + details.localPosition.dy.toString());
   }
 
-  void onHorizontalDragUpdate(DragUpdateDetails details) {
+  void onHorizontalDragUpdate(
+      DragUpdateDetails details, Offset offset, int index) {
+    // right
+    if (offsets[index].dx >= row - 4 &&
+        offsets[index].dy < row &&
+        (initialPos.value - details.globalPosition.dx) < 0) {
+      // print('right');
+      if (offsets[index].dy == freePos.value.dy &&
+          offsets[index].dx + 1 == freePos.value.dx) {
+        offsets[index] = freePos.value;
+        updateFreePos(offset);
+        updateCount();
+      }
+      // left direction
+    } else if (offsets[index].dx < row &&
+        offsets[index].dy < row &&
+        (initialPos.value - details.globalPosition.dx) > 0) {
+      // print('left');
+      if (offsets[index].dy == freePos.value.dy &&
+          offsets[index].dx == freePos.value.dx + 1) {
+        offsets[index] = freePos.value;
+        updateFreePos(offset);
+        updateCount();
+      }
+    }
     // print("x  " + details.localPosition.dx.toString());
     // print("y " + details.localPosition.dy.toString());
   }
 
-  void onHorizontalDragStart(DragStartDetails details) {
-    // print("x  " + details.localPosition.dx.toString());
-    // print("y " + details.localPosition.dy.toString());
-  }
+  void onHorizontalDragStart(DragStartDetails details) =>
+      initialPos.value = details.globalPosition.dx;
+  // print("x  " + details.localPosition.dx.toString());
+  // print("y " + details.localPosition.dy.toString());
 
   void onHorizontalDragDown(DragDownDetails details) {
     // print("x  " + details.localPosition.dx.toString());
     // print("y " + details.localPosition.dy.toString());
   }
+  void onHorizontalDragEnd(DragEndDetails details) => initialPos.value = 0.0;
 }
